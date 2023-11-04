@@ -4,7 +4,7 @@
 # ISS Program, SADT, SAIT
 # August 2022
 
-
+# Check if the number of command-line arguments is less than 1
 if [ $# -lt 1 ]; then
 	echo "Usage:"
 	echo ""
@@ -20,8 +20,9 @@ if [ $# -lt 1 ]; then
 
 	exit 1
 fi
-
+# Initialize an array to store positional argument
 POSITIONAL_ARGS=()
+# Initialize flags and variables
 GDB=False
 OUTPUT_FILE=""
 VERBOSE=False
@@ -29,8 +30,11 @@ BITS=False
 QEMU=False
 BREAK="_start"
 RUN=False
+
+# This Loop through command-line arguments
 while [[ $# -gt 0 ]]; do
 	case $1 in
+		# ... (different options and their actions)
 		-g|--gdb)
 			GDB=True
 			shift # past argument
@@ -74,15 +78,18 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+# Check if the specified file exists
 if [[ ! -f $1 ]]; then
 	echo "Specified file does not exist"
 	exit 1
 fi
 
+# Set default output filename if not provided
 if [ "$OUTPUT_FILE" == "" ]; then
 	OUTPUT_FILE=${1%.*}
 fi
 
+# Display information if verbose mode is enabled
 if [ "$VERBOSE" == "True" ]; then
 	echo "Arguments being set:"
 	echo "	GDB = ${GDB}"
@@ -99,6 +106,7 @@ if [ "$VERBOSE" == "True" ]; then
 
 fi
 
+# Assemble the assembly code based on the specified architecture (32-bit or 64-bit)
 if [ "$BITS" == "True" ]; then
 
 	nasm -f elf64 $1 -o $OUTPUT_FILE.o && echo ""
@@ -110,6 +118,7 @@ elif [ "$BITS" == "False" ]; then
 
 fi
 
+# Display information if verbose mode is enabled
 if [ "$VERBOSE" == "True" ]; then
 
 	echo "NASM finished"
@@ -117,12 +126,7 @@ if [ "$VERBOSE" == "True" ]; then
 	
 fi
 
-if [ "$VERBOSE" == "True" ]; then
-
-	echo "NASM finished"
-	echo "Linking ..."
-fi
-
+# Link the object file based on the specified architecture
 if [ "$BITS" == "True" ]; then
 
 	ld -m elf_x86_64 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
@@ -134,13 +138,14 @@ elif [ "$BITS" == "False" ]; then
 
 fi
 
-
+# Display information if verbose mode is enabled
 if [ "$VERBOSE" == "True" ]; then
 
 	echo "Linking finished"
 
 fi
 
+# Execute the program in QEMU if QEMU mode is enabled
 if [ "$QEMU" == "True" ]; then
 
 	echo "Starting QEMU ..."
@@ -160,8 +165,9 @@ if [ "$QEMU" == "True" ]; then
 	
 fi
 
+# Run GDB if GDB mode is enabled
 if [ "$GDB" == "True" ]; then
-
+	# Set up GDB parameters, including breakpoints and run option
 	gdb_params=()
 	gdb_params+=(-ex "b ${BREAK}")
 
@@ -170,7 +176,7 @@ if [ "$GDB" == "True" ]; then
 		gdb_params+=(-ex "r")
 
 	fi
-
+	 # Run GDB with the specified parameters
 	gdb "${gdb_params[@]}" $OUTPUT_FILE
 
 fi
